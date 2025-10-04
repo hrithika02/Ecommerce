@@ -22,14 +22,16 @@ mongoose
 
 // Nodemailer setup (optional)
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: process.env.SMTP_PORT,
-  secure: true, // true for 465, false for 587
+  service: "gmail",
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
   },
 });
+
+console.log("SMTP_USER:", process.env.SMTP_USER);
+console.log("SMTP_PASS:", process.env.SMTP_PASS ? "✅ Loaded" : "❌ Missing");
+
 // Contact API
 app.post("/api/payment/orders", (req, res) => {
   try {
@@ -115,23 +117,29 @@ app.post("/api/payment/verify", (req, res) => {
 app.post("/api/contact", async (req, res) => {
   try {
     const { name, email, message } = req.body;
+    console.log("📩 Incoming contact:", req.body); // 👈 ADD THIS
 
     if (!name || !email || !message) {
+      console.error("❌ Missing fields");
       return res.status(400).json({ error: "All fields are required" });
     }
 
     // Save to MongoDB
     const newContact = new Contact({ name, email, message });
     await newContact.save();
+    console.log("✅ Contact saved in DB");
 
-    // Optionally, send an email
-    if (transporter) {
+    // Send an email
+    try {
       await transporter.sendMail({
-        from: process.env.EMAIL_USER,
-        to: process.env.EMAIL_USER, // or any recipient
+        from: process.env.SMTP_USER,
+        to: process.env.SMTP_USER,
         subject: `New Contact Message from ${name}`,
         text: `Name: ${name}\nEmail: ${email}\nMessage: ${message}`,
       });
+      console.log("📧 Email sent successfully");
+    } catch (mailErr) {
+      console.error("❌ Email sending failed:", mailErr);
     }
 
     res.status(200).json({ message: "Message sent successfully!" });
@@ -140,7 +148,6 @@ app.post("/api/contact", async (req, res) => {
     res.status(500).json({ error: "Something went wrong!" });
   }
 });
-
 
 
 

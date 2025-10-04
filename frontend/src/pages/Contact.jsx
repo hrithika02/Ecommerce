@@ -23,7 +23,7 @@ const Contact = () => {
     setError("");
 
     try {
-     const res = await axios.post("https://ecommerce-b-4ggf.onrender.com/api/contact", formData);
+     const res = await axios.post("https://ecommerce-b-745m.onrender.com/api/contact", formData);
       setSuccess(res.data.message);
       setFormData({ name: "", email: "", message: "" });
     } catch (err) {
